@@ -1,0 +1,60 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    paths:
+      - 'Dockerfile'
+      - '.github/workflows/setup-php.yml'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  PUSH: ${{ vars.PUSH }}
+  PHP_EXTENSIONS: ${{ vars.PHP_EXTENSIONS }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    # 【關鍵】定義矩陣策略，同時跑 4 個版本
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.1', '8.2', '8.3', '8.4']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          # 這裡設定 Tag 規則，例如 ghcr.io/user/repo:8.1
+          tags: |
+            type=raw,value=${{ matrix.php }}
+            type=sha,prefix=${{ matrix.php }}-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: ${{  env.push }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            PHP_VERSION=${{ matrix.php }}
+            PHP_EXTENSIONS=${{ env.php-extensions }}
