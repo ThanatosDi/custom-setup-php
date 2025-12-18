@@ -29,6 +29,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Get current date
+        id: date
+        run: echo "today=$(TZ=Asia/Taipei date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
@@ -44,7 +48,7 @@ jobs:
           # 這裡設定 Tag 規則，例如 ghcr.io/user/repo:8.1
           tags: |
             type=raw,value=${{ matrix.php }}
-            type=sha,prefix=${{ matrix.php }}-
+            type=raw,value=${{ matrix.php }}-${{ steps.date.outputs.today }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
