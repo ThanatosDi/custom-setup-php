@@ -1,0 +1,23 @@
+name: setup-php
+
+on:
+  schedule:
+    - cron: "00 23 1 * *"
+    
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ["8.1", "8.2", "8.3", "8.4"]
+        services: ["workspace", "php-fpm", "php-worker", "laravel-echo-server"]
+      max-parallel: 2
+        # php-version: ["8.4"]
+        # services: ["workspace"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets._GITHUB_TOKEN }}
+          fetch-depth: 1
+          submodules: true
