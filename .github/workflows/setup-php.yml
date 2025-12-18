@@ -56,4 +56,4 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             PHP_VERSION=${{ matrix.php }}
-            PHP_EXTENSIONS=${{ env.php-extensions }}
+            PHP_EXTENSIONS=${{ env.PHP_EXTENSIONS }}
