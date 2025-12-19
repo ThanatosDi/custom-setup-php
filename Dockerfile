@@ -7,6 +7,7 @@ FROM php:${PHP_VERSION}-cli
 # 重要：再次宣告 ARG，因為 FROM 之後 ARG 會被重置
 ARG PHP_VERSION=8.4
 ARG PHP_EXTENSIONS=mongodb redis sqlite3 gd bcmath
+ARG RUNNER_VERSION=2.330.0
 
 # 安裝擴充套件工具
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
@@ -16,9 +17,7 @@ RUN install-php-extensions \
     @composer \
     ${PHP_EXTENSIONS}
 
-RUN export RUNNER_VERSION=$(curl -s -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/actions/runner/releases/latest | jq -r .tag_name | sed 's/^v//') \
-    && echo "Detected Runner Version: ${RUNNER_VERSION}" \
-    && curl -L -o runner.tar.gz "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
+RUN  curl -L -o runner.tar.gz "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
     # 解壓縮：只取出 externals/node24
     && tar -xzf runner.tar.gz externals/node24 \
     # 建立目標資料夾
