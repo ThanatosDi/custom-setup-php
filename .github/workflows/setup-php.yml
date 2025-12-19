@@ -11,6 +11,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   PHP_EXTENSIONS: ${{ vars.PHP_EXTENSIONS }}
+  RUNNER_VERSION: ${{ vars.RUNNER_VERSION }}
   DOCKER_BUILD_RECORD_UPLOAD: false
 
 jobs:
@@ -65,5 +66,6 @@ jobs:
           build-args: |
             PHP_VERSION=${{ matrix.php }}
             PHP_EXTENSIONS=${{ env.PHP_EXTENSIONS }}
+            RUNNER_VERSION=${{ env.RUNNER_VERSION }}
           cache-from: type=gha,scope=build-${{ matrix.php }}
           cache-to: type=gha,mode=max,scope=build-${{ matrix.php }}
