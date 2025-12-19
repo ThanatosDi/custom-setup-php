@@ -19,7 +19,7 @@ RUN install-php-extensions \
 
 RUN  curl -L -o runner.tar.gz "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
     # 解壓縮：只取出 externals/node24
-    && tar -xzf runner.tar.gz externals/node24 \
+    && tar xzf runner.tar.gz externals/node24 \
     # 建立目標資料夾
     && mkdir -p /_e \
     # 將 externals 資料夾下的內容移動到 /_e
