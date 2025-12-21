@@ -14,11 +14,14 @@ RUN apt-get update && apt-get install -y \
     curl \
     unzip \
     git \
-    software-properties-common \
-    add-apt-repository ppa:ondrej/php && \
+    software-properties-common
+
+    
+# 2. 加入 Ondřej Surý 的 PHP PPA (這是 Ubuntu 安裝最新 PHP 的標準姿勢)
+RUN add-apt-repository ppa:ondrej/php && \
     apt-get update
 
-# 2. 安裝 PHP 8.2 (或改成你需要版本) 以及 Laravel/Larastan 常用擴充
+# 3. 安裝 PHP (或改成你需要版本) 以及 Laravel/Larastan 常用擴充
 # 請根據你的專案需求增減 extensions
 RUN apt-get install -y \
     php${PHP_VERSION}-cli \
