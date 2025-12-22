@@ -76,6 +76,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: ${{ vars.PUSH == 'true' }}
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
