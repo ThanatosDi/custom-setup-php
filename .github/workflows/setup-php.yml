@@ -125,6 +125,9 @@ jobs:
   # 合併 Image 並推送最終 Tag
   merge:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     needs: build
     strategy:
       fail-fast: false
