@@ -1,7 +1,7 @@
 # PHP Runtime Image
 ARG PHP_VERSION=8.4
 
-FROM php:${PHP_VERSION}-cli
+FROM php:${PHP_VERSION}-bookworm
 
 # 設定環境變數，避免安裝過程出現互動視窗
 ENV DEBIAN_FRONTEND=noninteractive
