@@ -1,8 +1,7 @@
-# 使用官方 Runner 當作基底
-FROM myoung34/github-runner:ubuntu-noble
-
-# 重要：再次宣告 ARG，因為 FROM 之後 ARG 會被重置
+# PHP Runtime Image
 ARG PHP_VERSION=8.4
+
+FROM php:${PHP_VERSION}-cli
 
 # 設定環境變數，避免安裝過程出現互動視窗
 ENV DEBIAN_FRONTEND=noninteractive
@@ -13,7 +12,6 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     software-properties-common
-
 
 # 2. 加入 Ondřej Surý 的 PHP PPA
 RUN add-apt-repository ppa:ondrej/php && \
@@ -41,10 +39,19 @@ RUN apt-get install -y \
     php${PHP_VERSION}-mongodb \
     php${PHP_VERSION}-redis \
     php${PHP_VERSION}-sqlite3 \
-    php${PHP_VERSION}-memcached
+    php${PHP_VERSION}-memcached && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 4. 安裝 Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# 安裝 Composer
+# RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
+    php -r "if (hash_file('sha384', 'composer-setup.php') === 'c8b085408188070d5f52bcfe4ecfbee5f727afa458b2573b8eaaf77b3419b0bf2768dc67c86944da1544f06fa544fd47') { echo 'Installer verified'.PHP_EOL; } else { echo 'Installer corrupt'.PHP_EOL; unlink('composer-setup.php'); exit(1); }" && \
+    php composer-setup.php &&\
+    php -r "unlink('composer-setup.php');" && \
+    mv composer.phar /usr/local/bin/composer
 
 # 驗證安裝
 RUN php -v && composer -V
+
+CMD ["php", "-v"]
