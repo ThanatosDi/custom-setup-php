@@ -10,6 +10,11 @@ ARG PHP_EXTENSIONS
 # 設定環境變數，避免安裝過程出現互動視窗
 ENV DEBIAN_FRONTEND=noninteractive
 
+# 安裝系統套件
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 
 # 基礎擴展
