@@ -2,7 +2,7 @@
 ARG PHP_VERSION=8.4
 ARG PHP_EXTENSIONS=""
 
-FROM php:${PHP_VERSION}-cli-alpine
+FROM php:${PHP_VERSION}-cli
 
 # 重新宣告 ARG（FROM 之後 ARG 會失效）
 ARG PHP_EXTENSIONS
