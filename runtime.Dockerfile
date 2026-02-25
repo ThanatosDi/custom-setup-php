@@ -12,24 +12,17 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 
-RUN install-php-extensions \
-    xml \
-    xmlrpc \
-    curl \
-    gd \
-    imagick \
-    imap \
-    mbstring \
-    opcache \
-    soap \
-    zip \
-    bcmath \
-    mongodb \
-    redis \
-    sqlite3 \
-    memcached \
-    @composer \
-    ${PHP_EXTENSIONS}
+# 基礎擴展
+RUN install-php-extensions xml curl gd mbstring opcache zip bcmath @composer
+
+# 資料庫相關（中等變動頻率）
+RUN install-php-extensions mongodb redis sqlite3 memcached
+
+# 其他擴展（較少用到）
+RUN install-php-extensions xmlrpc imagick imap soap
+
+# 動態擴展（每次可能不同）
+RUN if [ -n "${PHP_EXTENSIONS}" ]; then install-php-extensions ${PHP_EXTENSIONS}; fi
 
 
 # 驗證安裝
