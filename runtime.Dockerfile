@@ -3,10 +3,12 @@ ARG PHP_VERSION=8.4
 ARG NODE_VERSION=lts
 ARG PHP_EXTENSIONS=""
 
+# 定義 Node.js 來源 stage（解決 COPY --from 不支援變數展開的問題）
+FROM node:${NODE_VERSION}-trixie-slim AS node-source
+
 FROM php:${PHP_VERSION}-cli
 
 # 重新宣告 ARG（FROM 之後 ARG 會失效）
-ARG NODE_VERSION
 ARG PHP_EXTENSIONS
 
 # 設定環境變數，避免安裝過程出現互動視窗
@@ -19,9 +21,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 
-# Node.js（從官方 image 複製，使用 bookworm 確保與 PHP image 相容）
-COPY --from=node:${NODE_VERSION}-trixie-slim /usr/local/bin/node /usr/local/bin/
-COPY --from=node:${NODE_VERSION}-trixie-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
+# Node.js（從 node-source stage 複製）
+COPY --from=node-source /usr/local/bin/node /usr/local/bin/
+COPY --from=node-source /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
     && ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 
