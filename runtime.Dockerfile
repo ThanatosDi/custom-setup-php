@@ -17,6 +17,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 
+# PHP 設定（適用於 CI/CD 環境）
+RUN echo "memory_limit = -1" > /usr/local/etc/php/conf.d/memory-limit.ini
+
 # 基礎擴展
 RUN install-php-extensions xml curl gd mbstring opcache zip bcmath @composer
 
