@@ -24,7 +24,7 @@ RUN install-php-extensions xml curl gd mbstring opcache zip bcmath @composer
 RUN install-php-extensions mongodb redis sqlite3 memcached
 
 # 其他擴展（較少用到）
-RUN install-php-extensions xmlrpc imagick imap soap
+RUN install-php-extensions xmlrpc imagick imap soap sockets
 
 # 動態擴展（每次可能不同）
 RUN if [ -n "${PHP_EXTENSIONS}" ]; then install-php-extensions ${PHP_EXTENSIONS}; fi

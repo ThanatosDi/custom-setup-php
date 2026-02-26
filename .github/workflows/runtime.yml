@@ -67,6 +67,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             PHP_VERSION=${{ matrix.php-version }}
+            PHP_EXTENSIONS=pcntl
           # 關鍵設定：這裡一定要輸出 type=image 並且 push-by-digest=true
           # 這樣才不會互相覆蓋 Tag，而是產生獨立的 Manifest
           outputs: type=image,name=${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
