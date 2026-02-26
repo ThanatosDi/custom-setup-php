@@ -26,8 +26,11 @@ RUN install-php-extensions mongodb redis sqlite3 memcached
 # 其他擴展（較少用到）
 RUN install-php-extensions xmlrpc imagick imap soap sockets
 
-# 動態擴展（每次可能不同）
-RUN if [ -n "${PHP_EXTENSIONS}" ]; then install-php-extensions ${PHP_EXTENSIONS}; fi
+# 動態擴展（每次可能不同，支援逗號分隔格式如 "pcntl, sockets, mongodb-1.21.0"）
+RUN if [ -n "${PHP_EXTENSIONS}" ]; then \
+    EXTS=$(echo "${PHP_EXTENSIONS}" | tr ',' ' ' | tr -s ' '); \
+    install-php-extensions ${EXTS}; \
+fi
 
 
 # 驗證安裝
