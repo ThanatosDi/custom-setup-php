@@ -31,7 +31,7 @@ RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
 RUN echo "memory_limit = -1" > /usr/local/etc/php/conf.d/memory-limit.ini
 
 # 基礎擴展
-RUN install-php-extensions xml curl gd mbstring opcache zip bcmath @composer
+RUN install-php-extensions xml curl gd mbstring opcache zip bcmath @composer exif
 
 # 資料庫相關（中等變動頻率）
 # PHP 8.4 使用 mongodb-2.1.1，其他版本使用 1.21.5
