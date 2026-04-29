@@ -34,14 +34,23 @@ RUN echo "memory_limit = -1" > /usr/local/etc/php/conf.d/memory-limit.ini
 RUN install-php-extensions xml curl gd mbstring opcache zip bcmath @composer exif
 
 # 資料庫相關（中等變動頻率）
-# PHP 8.4 使用 mongodb-2.1.1，其他版本使用 1.21.5
+# ext-mongodb
+# PHP8.5 安裝最新版
+# PHP8.4 安裝 2.1.1
+# PHP8.1~8.3 安裝 1.21.5
+
 RUN PHP_VER=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;') && \
-    if [ "$PHP_VER" = "8.4" ]; then \
-        MONGO_VER="2.1.1"; \
-    else \
-        MONGO_VER="1.21.5"; \
-    fi && \
-    install-php-extensions mongodb-${MONGO_VER} redis sqlite3 memcached
+    case "$PHP_VER" in
+      "8.1" | "8.2" | "8.3")
+        install-php-extensions mongodb-1.21.5 redis sqlite3 memcached \
+        ;;
+      "8.4")
+        install-php-extensions mongodb-2.1.1 redis sqlite3 memcached \
+        ;;
+      *)
+        install-php-extensions mongodb redis sqlite3 memcached
+        ;;
+    esac
 
 # 其他擴展（較少用到）
 RUN install-php-extensions xmlrpc imagick imap soap sockets
