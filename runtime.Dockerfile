@@ -40,16 +40,16 @@ RUN install-php-extensions xml curl gd mbstring opcache zip bcmath @composer exi
 # PHP8.1~8.3 安裝 1.21.5
 
 RUN PHP_VER=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;') && \
-    case "$PHP_VER" in
-      "8.1" | "8.2" | "8.3")
+    case "$PHP_VER" in \
+      "8.1" | "8.2" | "8.3") \
         install-php-extensions mongodb-1.21.5 redis sqlite3 memcached \
-        ;;
-      "8.4")
+        ;; \
+      "8.4") \
         install-php-extensions mongodb-2.1.1 redis sqlite3 memcached \
-        ;;
-      *)
-        install-php-extensions mongodb redis sqlite3 memcached
-        ;;
+        ;; \
+      *) \
+        install-php-extensions mongodb redis sqlite3 memcached \
+        ;; \
     esac
 
 # 其他擴展（較少用到）
