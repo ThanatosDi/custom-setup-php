@@ -20,7 +20,7 @@ jobs:
   build:
     name: Build PHP${{ matrix.php-version }} ${{ matrix.platform }}
     runs-on: ${{ matrix.runner }}
-    environment: 
+    environment:
       name: ${{ github.ref == 'refs/heads/main' && 'production' || 'stage' }}
     permissions:
       contents: read
@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['8.1', '8.2', '8.3', '8.4']
+        php-version: ['8.1', '8.2', '8.3', '8.4', '8.5']
         platform: [linux/amd64, linux/arm64]
         include:
           - platform: linux/amd64
@@ -100,7 +100,7 @@ jobs:
   merge:
     name: Merge PHP${{ matrix.php-version }}
     runs-on: ubuntu-latest
-    environment: 
+    environment:
       name: ${{ github.ref == 'refs/heads/main' && 'production' || 'stage' }}
     if: ${{ vars.PUSH_IMAGE }}
     permissions:
@@ -110,7 +110,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['8.1', '8.2', '8.3', '8.4']
+        php-version: ['8.1', '8.2', '8.3', '8.4', '8.5']
 
     steps:
       - name: Get current date
