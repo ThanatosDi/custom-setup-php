@@ -20,6 +20,8 @@ jobs:
   build:
     name: Build PHP${{ matrix.php-version }} ${{ matrix.platform }}
     runs-on: ${{ matrix.runner }}
+    environment: 
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'stage' }}
     permissions:
       contents: read
       packages: write
@@ -77,7 +79,7 @@ jobs:
           build-args: |
             PHP_VERSION=${{ matrix.php-version }}
             PHP_EXTENSIONS=pcntl
-          outputs: type=image,"name=${{ env.GHCR_IMAGE_NAME }},${{ env.DOCKERHUB_IMAGE_NAME }}",push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,"name=${{ env.GHCR_IMAGE_NAME }},${{ env.DOCKERHUB_IMAGE_NAME }}",push-by-digest=true,name-canonical=true,push=${{ vars.PUSH_IMAGE }}
           cache-from: type=gha,scope=build-${{ matrix.php-version }}-${{ matrix.slug }}
           cache-to: type=gha,mode=max,scope=build-${{ matrix.php-version }}-${{ matrix.slug }}
 
@@ -98,6 +100,9 @@ jobs:
   merge:
     name: Merge PHP${{ matrix.php-version }}
     runs-on: ubuntu-latest
+    environment: 
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'stage' }}
+    if: ${{ vars.PUSH_IMAGE }}
     permissions:
       contents: read
       packages: write
