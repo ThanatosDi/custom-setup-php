@@ -25,6 +25,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      push_image: ${{ vars.PUSH_IMAGE }}
 
     strategy:
       fail-fast: false
@@ -100,9 +102,7 @@ jobs:
   merge:
     name: Merge PHP${{ matrix.php-version }}
     runs-on: ubuntu-latest
-    environment:
-      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'stage' }}
-    if: ${{ vars.PUSH_IMAGE }}
+    if: ${{ needs.build.outputs.push_image == 'true' }}
     permissions:
       contents: read
       packages: write
