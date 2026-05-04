@@ -1,127 +1,111 @@
-# PHP Action Runner
+# PHP Runtime
 
-基於 GitHub Actions Runner 的 PHP 執行環境 Docker 映像檔，預先安裝多種常用 PHP 擴充套件，適用於 CI/CD 自動化流程。
+輕量化 PHP CLI 容器映像，內建常用擴展與 Node.js，適合在 CI/CD 工作流程中作為 job container 使用。
 
-## 功能特色
+- **多版本支援**：PHP 8.1、8.2、8.3、8.4、8.5
+- **多平台架構**：`linux/amd64`、`linux/arm64`
+- **每日自動建置**：每日重新建置以取得最新基底映像與擴展更新
+- **雙 Registry 發布**：同時推送至 GitHub Container Registry 與 Docker Hub
 
-- **多版本 PHP 支援**：提供 PHP 8.1、8.2、8.3、8.4 版本
-- **多平台架構**：同時支援 `linux/amd64` 與 `linux/arm64`
-- **Laravel 開發友善**：預裝 Laravel 專案常用擴充套件
-- **自動更新**：每日自動檢查基底映像更新並重新建置
-- **Composer 內建**：已預裝最新版 Composer
-
-## 快速開始
-
-### 拉取映像檔
+## 拉取映像
 
 ```bash
-# 拉取特定 PHP 版本
-docker pull ghcr.io/thanatosdi/php-action-runner:8.4
+# GitHub Container Registry
+docker pull ghcr.io/thanatosdi/php-runtime:8.4
 
-# 拉取特定日期版本
-docker pull ghcr.io/thanatosdi/php-action-runner:8.4-20251224
+# Docker Hub
+docker pull thanatosdi/php-runtime:8.4
 ```
 
-### 可用標籤
+## 可用標籤
 
-| 標籤格式 | 說明 |
-|---------|------|
-| `8.1`, `8.2`, `8.3`, `8.4` | 各 PHP 版本的最新映像 |
-| `8.x-YYYYMMDD` | 特定日期的版本（例如 `8.4-20251224`）|
+| 標籤 | 說明 |
+|------|------|
+| `8.1`, `8.2`, `8.3`, `8.4`, `8.5` | 各 PHP 版本最新映像 |
+| `8.x-YYYYMMDD` | 特定日期版本（例如 `8.4-20260429`，時區 Asia/Taipei）|
 
-## 預裝軟體
+## 預裝內容
 
-### PHP 擴充套件
-
-| 類別 | 擴充套件 |
-|------|---------|
-| 核心 | cli, fpm, common |
-| Web | xml, xmlrpc, curl, gd, imagick |
-| 開發 | dev |
-| 通訊 | imap, mbstring, soap |
-| 效能 | opcache, bcmath |
+| 類別 | 套件 |
+|------|------|
+| 基礎擴展 | xml, curl, gd, mbstring, opcache, zip, bcmath, exif |
 | 資料庫 | mongodb, redis, sqlite3, memcached |
-| 其他 | zip |
+| 其他擴展 | xmlrpc, imagick, imap, soap, sockets |
+| 工具 | Composer, Node.js (LTS), npm, git |
 
-### 其他工具
+> [!NOTE]
+> 於 PHP8.5 版 opcache 已包含在發行板中, 故不需在額外安裝
 
-- Composer（最新版）
-- Git
-- curl
-- unzip
+> MongoDB 擴展版本會依 PHP 版本自動選擇：PHP 8.1～8.3 安裝 `1.21.5`、PHP 8.4 安裝 `2.1.1`、PHP 8.5+ 安裝最新版。
 
 ## 在 GitHub Actions 使用
-
-### 作為自架 Runner 映像
-
-此映像基於 [myoung34/github-runner](https://github.com/myoung34/docker-github-actions-runner)，可直接作為自架 GitHub Actions Runner 使用：
-
-```yaml
-services:
-  runner:
-    image: ghcr.io/thanatosdi/php-action-runner:8.4
-    environment:
-      REPO_URL: https://github.com/your-org/your-repo
-      RUNNER_TOKEN: ${{ secrets.RUNNER_TOKEN }}
-```
-
-### 在工作流程中使用
 
 ```yaml
 jobs:
   test:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     container:
-      image: ghcr.io/thanatosdi/php-action-runner:8.4
+      image: ghcr.io/thanatosdi/php-runtime:8.4
     steps:
       - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: composer install
-      - name: Run tests
-        run: php artisan test
+      - run: composer install
+      - run: php artisan test
 ```
 
 ## 本地建置
 
-如需自行建置映像檔：
-
 ```bash
-# 建置預設版本 (PHP 8.4)
-docker build -t php-action-runner .
+# 預設版本 (PHP 8.4)
+docker build -f runtime.Dockerfile -t php-runtime .
 
-# 建置指定 PHP 版本
-docker build --build-arg PHP_VERSION=8.3 -t php-action-runner:8.3 .
+# 指定 PHP 版本
+docker build \
+  --build-arg PHP_VERSION=8.3 \
+  -f runtime.Dockerfile \
+  -t php-runtime:8.3 .
+
+# 額外安裝擴展（逗號分隔）
+docker build \
+  --build-arg PHP_VERSION=8.4 \
+  --build-arg PHP_EXTENSIONS="pcntl,intl" \
+  -f runtime.Dockerfile \
+  -t php-runtime:8.4-custom .
 ```
+
+## 自動建置流程
+
+[`.github/workflows/runtime.yml`](.github/workflows/runtime.yml) 負責映像的自動建置與推送：
+
+- **觸發條件**
+  - `runtime.Dockerfile` 或 workflow 本身有變動時
+  - 手動觸發（`workflow_dispatch`）
+  - 每日排程（UTC 00:00）
+
+- **建置策略**
+  - 矩陣建置：5 個 PHP 版本 × 2 個平台 = 10 個並行建置
+  - 採用 `push-by-digest` 後再透過 [`merge-docker-digests`](https://github.com/ThanatosDi/merge-docker-digests) action 合併 manifest list
+  - 建置產出同時推送至 GHCR 與 Docker Hub
+
+- **推送控制**
+  - 透過 environment variable `PUSH_IMAGE` 控制是否實際推送
+  - environment 依 branch 切換：`main` → `production`、其他 → `stage`
 
 ## 專案結構
 
 ```
 .
-├── Dockerfile                          # Docker 映像定義檔
+├── runtime.Dockerfile           # PHP Runtime 映像定義
 ├── .github/
 │   └── workflows/
-│       └── setup-php.yml               # CI/CD 自動建置工作流程
-└── README.md                           # 本文件
+│       └── runtime.yml          # 自動建置 workflow
+├── LICENSE
+└── README.md
 ```
 
-## 自動建置流程
+## 可優化部分
+1. node 版本不寫死 LTS, 使用 nvm 來預安裝 LTS 但可依照使用者狀況於 workflow 中調整版本
 
-此專案使用 GitHub Actions 自動建置並推送至 GitHub Container Registry：
-
-1. **觸發條件**
-   - 推送 `Dockerfile` 或 `setup-php.yml` 異動時
-   - 手動觸發 (workflow_dispatch)
-   - 每日排程 (UTC 00:00)
-
-2. **建置策略**
-   - 矩陣建置：4 個 PHP 版本 × 2 個平台架構 = 8 個並行建置
-   - 智慧更新：僅在基底映像 24 小時內有更新時才重新建置
-   - 可透過設定 `IGNORE_CHECK_RUNNER_VERSION` 變數強制建置
-
-3. **映像合併**
-   - 使用 Docker Buildx imagetools 合併多架構映像
-   - 產生統一的 manifest list 供跨平台使用
 
 ## 授權條款
 
-MIT License
+[MIT License](LICENSE)
