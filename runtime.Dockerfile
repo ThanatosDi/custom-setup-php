@@ -1,15 +1,15 @@
 # PHP Runtime Image
 ARG PHP_VERSION=8.4
 ARG NODE_VERSION=lts
+ARG NVM_VERSION=v0.40.1
 ARG PHP_EXTENSIONS=""
-
-# 定義 Node.js 來源 stage（解決 COPY --from 不支援變數展開的問題）
-FROM node:${NODE_VERSION}-trixie-slim AS node-source
 
 FROM php:${PHP_VERSION}-cli
 
 # 重新宣告 ARG（FROM 之後 ARG 會失效）
 ARG PHP_EXTENSIONS
+ARG NODE_VERSION
+ARG NVM_VERSION
 
 # 設定環境變數，避免安裝過程出現互動視窗
 ENV DEBIAN_FRONTEND=noninteractive
@@ -17,15 +17,38 @@ ENV DEBIAN_FRONTEND=noninteractive
 # 安裝系統套件
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
+    curl \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 
-# Node.js（從 node-source stage 複製）
-COPY --from=node-source /usr/local/bin/node /usr/local/bin/
-COPY --from=node-source /usr/local/lib/node_modules /usr/local/lib/node_modules
-RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
-    && ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+# 安裝 nvm 與 Node.js（預設 LTS，可透過 build arg NODE_VERSION 指定特定版本）
+ENV NVM_DIR=/usr/local/nvm
+
+RUN mkdir -p "$NVM_DIR" \
+    && curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash \
+    && . "$NVM_DIR/nvm.sh" \
+    && if [ "$NODE_VERSION" = "lts" ]; then \
+         nvm install --lts \
+         && nvm alias default 'lts/*'; \
+       else \
+         nvm install "$NODE_VERSION" \
+         && nvm alias default "$NODE_VERSION"; \
+       fi \
+    && nvm use default \
+    && DEFAULT_NODE="$(nvm version default)" \
+    && ln -sf "$NVM_DIR/versions/node/$DEFAULT_NODE/bin/node" /usr/local/bin/node \
+    && ln -sf "$NVM_DIR/versions/node/$DEFAULT_NODE/bin/npm" /usr/local/bin/npm \
+    && ln -sf "$NVM_DIR/versions/node/$DEFAULT_NODE/bin/npx" /usr/local/bin/npx \
+    && nvm cache clear
+
+# 讓互動 shell（bash login shell）也能直接使用 nvm 指令
+RUN printf '%s\n' \
+      'export NVM_DIR="/usr/local/nvm"' \
+      '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' \
+      '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"' \
+      > /etc/profile.d/nvm.sh
 
 # PHP 設定（適用於 CI/CD 環境）
 RUN echo "memory_limit = -1" > /usr/local/etc/php/conf.d/memory-limit.ini
