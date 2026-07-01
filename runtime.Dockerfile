@@ -18,10 +18,14 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
+    unzip \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+
+# 安裝 fnm 但暫時不使用
+RUN curl -fsSL https://fnm.vercel.app/install | bash
 
 # 安裝 nvm 與 Node.js（預設 LTS，可透過 build arg NODE_VERSION 指定特定版本）
 ENV NVM_DIR=/usr/local/nvm
