@@ -80,7 +80,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             PHP_VERSION=${{ matrix.php-version }}
-            PHP_EXTENSIONS=pcntl
+            PHP_EXTENSIONS=pcntl,pcov
           outputs: type=image,"name=${{ env.GHCR_IMAGE_NAME }},${{ env.DOCKERHUB_IMAGE_NAME }}",push-by-digest=true,name-canonical=true,push=${{ vars.PUSH_IMAGE }}
           cache-from: type=gha,scope=build-${{ matrix.php-version }}-${{ matrix.slug }}
           cache-to: type=gha,mode=max,scope=build-${{ matrix.php-version }}-${{ matrix.slug }}
